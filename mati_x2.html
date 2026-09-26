@@ -4,32 +4,70 @@
     <meta charset="UTF-8">
     <title>X2 Blocks - Végtelen Mód</title>
     <style>
-        /* Eredeti stílusok */
         body { background: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; }
         .menu { margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
         button { padding: 8px 12px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; background: #444; color: white; font-size: 12px; }
         .btn-reset { background: #8b0000; }
         #score-board { font-size: 18px; margin-bottom: 10px; color: #ffcc00; font-weight: bold; }
 
-        /* Játék konténer és blokkok[cite: 1] */
         #game-container { position: relative; width: 320px; height: 450px; background: #333; border: 4px solid #444; display: flex; }
         .column { flex: 1; border-right: 1px solid #444; display: flex; flex-direction: column-reverse; height: 100%; overflow: hidden; }
         .column:last-child { border-right: none; }
-        .block { width: 100%; min-height: 10px; flex: 1; max-height: 60px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid rgba(0,0,0,0.2); font-size: clamp(10px, 3vw, 14px); color: #000; box-sizing: border-box; animation: drop 0.15s ease-out; }
-        
-        @keyframes drop { from { transform: translateY(-50%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
-        #next-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 5px; }
-        #next-block { width: 60px; height: 60px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; border: 3px solid #fff; }
+        .block { width: 100%; min-height: 10px; flex: 1; max-height: 60px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid rgba(0,0,0,0.2); font-size: clamp(10px, 3vw, 14px); box-sizing: border-box; animation: drop 0.15s ease-out; }
 
-        /* Új stílus az üzenőfalnak (Message board for spawn updates) */
-        #message-board { height: 20px; font-size: 14px; color: #00ffcc; font-weight: bold; margin-bottom: 10px; text-align: center; }
+        @keyframes drop { from { transform: translateY(-50%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        #next-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 10px; }
+        #next-block { width: 60px; height: 60px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid #fff; }
+
+        /* Rekordváltó fehér kocka stílusa / Record change modal styling */
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        #modal-box {
+            background: #ffffff;
+            color: #000000;
+            padding: 20px;
+            border-radius: 12px;
+            width: 230px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        #modal-text {
+            font-size: 16px;
+            font-weight: bold;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #modal-btn {
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        #modal-btn:hover { background: #218838; }
     </style>
 </head>
 <body>
 
     <div id="score-board">Pont: 0</div>
-    <div id="message-board"></div>
 
     <div class="menu">
         <button onclick="saveGame()">Mentés</button>
@@ -50,66 +88,82 @@
         <div class="column" onclick="shoot(4)"></div>
     </div>
 
+    <!-- Fehér felugró ablak rekordváltáskor / Record dialog popup -->
+    <div id="modal-overlay">
+        <div id="modal-box">
+            <div id="modal-text"></div>
+            <button id="modal-btn" onclick="advanceModal()">OK</button>
+        </div>
+    </div>
+
     <script>
-        // Feature 1: Extended config with repeating colors up to 518Q, plus Infinite (∞)
+        // Feature 3: Updated numbers and exact requested colors
         const config = [
-            { v: "128B", c: "#FFC0CB" }, { v: "256B", c: "#808080" }, { v: "513B", c: "#ADD8E6" },
-            { v: "1T", c: "#FFFF00" }, { v: "2T", c: "#FFA500" }, { v: "4T", c: "#00008B" },
-            { v: "8T", c: "#90EE90" }, { v: "16T", c: "#A52A2A" }, { v: "32T", c: "#CCBB00" },
-            { v: "64T", c: "#D8BFD8" }, { v: "128T", c: "#FF0000" }, { v: "257T", c: "#F0FFFF" },
-            { v: "514T", c: "#00008B" }, { v: "1Q", c: "#FFB6C1" },
-            // Repeated colors for new numbers
-            { v: "2Q", c: "#FFC0CB" }, { v: "4Q", c: "#808080" }, { v: "8Q", c: "#ADD8E6" },
-            { v: "16Q", c: "#FFFF00" }, { v: "32Q", c: "#FFA500" }, { v: "64Q", c: "#00008B" },
-            { v: "128Q", c: "#90EE90" }, { v: "256Q", c: "#A52A2A" }, { v: "518Q", c: "#CCBB00" },
-            // Feature 2: Infinite value
-            { v: "∞", c: "#000000" } 
+            { v: "128B", c: "#FFC0CB" }, // 0
+            { v: "256B", c: "#808080" }, // 1
+            { v: "513B", c: "#ADD8E6" }, // 2
+            { v: "1T", c: "#FFFF00" },   // 3
+            { v: "2T", c: "#FFA500" },   // 4
+            { v: "4T", c: "#00008B" },   // 5
+            { v: "8T", c: "#90EE90" },   // 6
+            { v: "16T", c: "#A52A2A" },  // 7
+            { v: "32T", c: "#CCBB00" },  // 8 (32T threshold)
+            { v: "64T", c: "#D8BFD8" },  // 9
+            { v: "128T", c: "#FF0000" }, // 10
+            { v: "257T", c: "#F0FFFF" }, // 11
+            { v: "514T", c: "#00008B" }, // 12
+            { v: "1Q", c: "#FFB6C1" },   // 13
+            { v: "2Q", c: "#808080" },   // 14 (256B színe)
+            { v: "4Q", c: "#ADD8E6" },   // 15 (513B színe)
+            { v: "8Q", c: "#FFFF00" },   // 16 (1T színe)
+            { v: "16Q", c: "#FFA500" },  // 17 (2T színe)
+            { v: "32Q", c: "#00008B" },  // 18 (4T színe)
+            { v: "∞", c: "#FFFFFF" }     // 19 (fehér háttér)
         ];
 
         let columns = [[], [], [], [], []];
         let nextIndex = 0;
         let score = 0;
+        let maxRecord = 0; // Elért legmagasabb rekord azonosítója
         
-        // Spawn boundaries
         let minSpawn = 0;
         let maxSpawn = 3;
+        let recordBrokenThisTurn = false;
 
-        // Helper: Decide text color based on background darkness
-        function getTextColor(index) {
-            const darkColors = ["#00008B", "#A52A2A", "#FF0000", "#000000"];
-            return darkColors.includes(config[index].c) ? "#fff" : "#000";
+        // Automatikus betűszín választó a háttér világossága alapján / Auto contrast text color calculator
+        function getTextColor(hex) {
+            if (!hex) return '#000';
+            hex = hex.replace('#', '');
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            return brightness < 130 ? '#ffffff' : '#000000';
         }
 
-        // Feature 3: Calculate spawn range dynamically based on the highest block
+        // Kiszámolja az elérhető sorsolási határokat / Calculate spawn bounds
         function updateSpawnRange() {
             let maxFound = 0;
-            // Keresés a pályán a legmagasabb blokk után / Find highest block on board
             columns.forEach(col => col.forEach(val => {
                 if (val > maxFound) maxFound = val;
             }));
 
-            let oldMin = minSpawn;
-            
-            // Számoljuk a különbséget: pl. 32T (index 8) esetén minSpawn = 1, maxSpawn = 4
-            // Különbség (gap): minSpawn gap = 7, maxSpawn gap = 4
             minSpawn = Math.max(0, maxFound - 7);
             maxSpawn = Math.max(3, maxFound - 4);
-            
-            // Ha változott a minimum (kiesett egy blokk), kiírjuk a játékosnak
-            // If the spawn range advanced, notify the user
-            if (minSpawn > oldMin) {
-                const msgBoard = document.getElementById('message-board');
-                msgBoard.innerText = `${config[maxFound].v} elérve! Megszűnt: ${config[oldMin].v}, Új jöhet: ${config[maxSpawn].v}`;
-            }
+        }
+
+        // Feature 1: Eltávolítja a régi kicsi számokat az egész pályáról / Clean old blocks from board
+        function cleanBoard() {
+            updateSpawnRange();
+            columns = columns.map(col => col.filter(val => val >= minSpawn));
         }
 
         function updateNext() {
-            // Új blokk sorsolása az aktuális limitek alapján / Randomize within dynamic bounds
             nextIndex = minSpawn + Math.floor(Math.random() * (maxSpawn - minSpawn + 1)); 
             const nextEl = document.getElementById('next-block');
             nextEl.innerText = config[nextIndex].v;
             nextEl.style.backgroundColor = config[nextIndex].c;
-            nextEl.style.color = getTextColor(nextIndex);
+            nextEl.style.color = getTextColor(config[nextIndex].c);
         }
 
         function render() {
@@ -122,19 +176,26 @@
                     block.className = 'block';
                     block.innerText = config[valIndex].v;
                     block.style.backgroundColor = config[valIndex].c;
-                    block.style.color = getTextColor(valIndex);
+                    block.style.color = getTextColor(config[valIndex].c);
                     colEl.appendChild(block);
                 });
             });
         }
 
         function shoot(col) {
+            recordBrokenThisTurn = false;
             columns[col].push(nextIndex);
             checkMerge(col);
-            updateSpawnRange();
-            updateNext();
-            render();
-            autoSave();
+
+            // Feature 2: Ha 32T (index 8) feletti új rekord született
+            if (recordBrokenThisTurn) {
+                showRecordModal();
+            } else {
+                cleanBoard();
+                updateNext();
+                render();
+                autoSave();
+            }
         }
 
         function checkMerge(col) {
@@ -144,59 +205,95 @@
             if (colData[colData.length - 1] === colData[colData.length - 2]) {
                 let last = colData.pop();
                 
-                // Feature 2: Infinite logic (∞ + ∞ = ∞)
+                // Végtelen fúzió (∞ + ∞ = ∞)
                 if (last === config.length - 1) {
-                    colData[colData.length - 1] = last; // Marad Végtelen / Stays Infinite
-                    score += 50000; // Extra pont végtelen fúziónál
+                    colData[colData.length - 1] = last;
+                    score += 50000;
                     checkMerge(col);
                 } 
-                // Normal merge logic
+                // Normál egyesülés
                 else if (last < config.length - 1) {
-                    colData[colData.length - 1] = last + 1;
-                    score += (last + 2) * 20; 
+                    let newIndex = last + 1;
+                    colData[colData.length - 1] = newIndex;
+                    score += (newIndex + 1) * 20;
+
+                    // Ellenőrizzük, hogy elérte-e a 32T-t (index 8) és döntött-e rekordot
+                    if (newIndex >= 8 && newIndex > maxRecord) {
+                        maxRecord = newIndex;
+                        recordBrokenThisTurn = true;
+                    }
+
                     checkMerge(col);
                 }
             }
         }
 
+        // Feature 2: Háromlépéses felugró ablak logika / 3-step modal dialog sequence
+        let modalStep = 0;
+
+        function showRecordModal() {
+            modalStep = 1;
+            document.getElementById('modal-text').innerText = "Rekordot váltottál!";
+            document.getElementById('modal-overlay').style.display = "flex";
+        }
+
+        function advanceModal() {
+            if (modalStep === 1) {
+                modalStep = 2;
+                document.getElementById('modal-text').innerText = "Új szám jöhet!";
+            } else if (modalStep === 2) {
+                modalStep = 3;
+                document.getElementById('modal-text').innerText = "Törlődik a legkisebb szám.";
+            } else if (modalStep === 3) {
+                modalStep = 0;
+                document.getElementById('modal-overlay').style.display = "none";
+                // Az utolsó OK után tisztítjuk le a pályát és frissítünk
+                cleanBoard();
+                updateNext();
+                render();
+                autoSave();
+            }
+        }
+
         function autoSave() {
-            localStorage.setItem('mati_x2_v4', JSON.stringify({ columns, score, nextIndex }));
+            localStorage.setItem('mati_x2_v5', JSON.stringify({ columns, score, nextIndex, maxRecord }));
         }
 
         function saveGame() { autoSave(); alert("Mentve!"); }
 
         function loadGame() {
-            const saved = localStorage.getItem('mati_x2_v4');
+            const saved = localStorage.getItem('mati_x2_v5');
             if(saved) {
                 const data = JSON.parse(saved);
-                columns = data.columns; 
-                score = data.score; 
-                nextIndex = data.nextIndex;
+                columns = data.columns || [[], [], [], [], []];
+                score = data.score || 0;
+                nextIndex = data.nextIndex || 0;
+                maxRecord = data.maxRecord || 0;
                 
-                updateSpawnRange(); // Frissítjük a sorsolási esélyeket betöltéskor
+                cleanBoard();
                 render();
                 
                 const nextEl = document.getElementById('next-block');
                 nextEl.innerText = config[nextIndex].v;
                 nextEl.style.backgroundColor = config[nextIndex].c;
-                nextEl.style.color = getTextColor(nextIndex);
+                nextEl.style.color = getTextColor(config[nextIndex].c);
             }
         }
 
         function resetGame() {
             if(confirm("Új pálya?")) {
-                columns = [[], [], [], [], []]; 
+                columns = [[], [], [], [], []];
                 score = 0;
+                maxRecord = 0;
                 minSpawn = 0;
                 maxSpawn = 3;
-                document.getElementById('message-board').innerText = "";
-                localStorage.removeItem('mati_x2_v4');
-                updateNext(); 
+                localStorage.removeItem('mati_x2_v5');
+                updateNext();
                 render();
             }
         }
 
-        const initialLoad = localStorage.getItem('mati_x2_v4');
+        const initialLoad = localStorage.getItem('mati_x2_v5');
         if(initialLoad) { loadGame(); } else { updateNext(); render(); }
     </script>
 </body>
