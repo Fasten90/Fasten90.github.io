@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>X2 Blocks - Végtelen Mód v0.5</title>
+    <title>X2 Blocks - Végtelen Mód v0.6</title>
     <style>
         /* Alapvető oldalbeállítások / Basic page styling */
         body { 
@@ -95,6 +95,12 @@
             animation: drop 0.15s ease-out; /* Bekattintáskor finom leeső animáció */
         }
 
+        /* Áthúzott nulla (0) formázó osztály */
+        .zero-strike {
+            text-decoration: line-through;
+            display: inline-block;
+        }
+
         /* Leesési animáció definíciója */
         @keyframes drop { 
             from { transform: translateY(-50%); opacity: 0; } 
@@ -175,7 +181,7 @@
     <!-- Pontszám és Verzió léce -->
     <div id="score-board">
         <span>Pont: <span id="score-val">0</span></span>
-        <span class="version-tag">v0.5</span>
+        <span class="version-tag">v0.6</span>
     </div>
 
     <!-- Menü gombok -->
@@ -215,15 +221,17 @@
            1. KOMMENTEK: Minden függvény, logikai lépés és beállítás részletesen 
               fel van kommentelve magyarul. Tilos a kommentek törlése/ritkítása!
               Minden új kódmódosításnál bővíteni kell a magyarázó megjegyzéseket.
-           2. VERZIÓZÁS: Jelenlegi verzió: v0.5. Új számok vagy funkciók hozzáadásakor
-              a verziószámot emelni kell az HTML fejlécre és a mentési állományba is.
+           2. VERZIÓZÁS: Jelenlegi verzió: v0.6. Új számok vagy funkciók hozzáadásakor
+              a verziószámot emelni kell a HTML fejlécre és a mentési állományba is.
            3. VISSZAFELE KOMPATIBILITÁS: A mentés 'stringColumns' alapon működik
-              (szöveges értékek tárolása), így a jövőbeli verziókban (v0.6, v0.7...)
+              (szöveges értékek tárolása), így a jövőbeli verziókban (v0.7, v0.8...)
               új számok beszúrásakor SEM csúszhatnak el a játékos meglévő blokkjai.
+           4. DÍSZTÉS ÉS FORMÁZÁS: A megjelenítésnél a '0' (nulla) karakterek 
+              automatikusan áthúzásra kerülnek a 'formatZero()' segédfüggvény által.
            ========================================================================== */
 
         /* ==========================================================================
-           1. BEÁLLÍTÁSOK ÉS SZÁM-TÁBLÁZAT (CONFIG - v0.5)
+           1. BEÁLLÍTÁSOK ÉS SZÁM-TÁBLÁZAT (CONFIG - v0.6)
            Itt található az összes blokk értéke (v) és háttérszíne (c) sorrendben.
            ========================================================================== */
         const config = [
@@ -251,19 +259,21 @@
             { v: "258Q", c: "#CCBB00" }, // Index 21 (32T színe)
             { v: "516Q", c: "#D8BFD8" }, // Index 22 (64T színe)
             { v: "1U",   c: "#FF0000" }, // Index 23 (128T színe)
-            
-            /* --- ÚJ SZÁMOK v0.5 BRANCS --- */
             { v: "2U",   c: "#F0FFFF" }, // Index 24 (257T színe)
             { v: "4U",   c: "#00008B" }, // Index 25 (514T színe)
-            { v: "6U",   c: "#FFB6C1" }, // Index 26 (1Q színe - 4U duplázódás elkerülésére 6U)
+            { v: "6U",   c: "#FFB6C1" }, // Index 26 (1Q színe)
             { v: "8U",   c: "#808080" }, // Index 27 (2Q színe)
             { v: "16U",  c: "#ADD8E6" }, // Index 28 (4Q színe)
             { v: "32U",  c: "#FFFF00" }, // Index 29 (8Q színe)
             { v: "65U",  c: "#FFA500" }, // Index 30 (16Q színe)
             { v: "130U", c: "#00008B" }, // Index 31 (32Q színe)
             
+            /* --- ÚJ SZÁMOK v0.6 BRANCS --- */
+            { v: "260U", c: "#90EE90" }, // Index 32 (64Q színe)
+            { v: "520U", c: "#A52A2A" }, // Index 33 (129Q színe)
+            
             /* --- VÉGTELEN MÓD ZÁRÓ BLOKK --- */
-            { v: "∞",    c: "#90EE90" }  // Index 32 (Végtelen jel, 64Q zöld színével)
+            { v: "∞",    c: "#CCBB00" }  // Index 34 (Végtelen jel, 258Q sárga/arany színével)
         ];
 
         /* Mentési kulcsok a böngésző tárhelyéhez (localStorage) */
@@ -285,6 +295,15 @@
         /* ==========================================================================
            3. SEGÉDFÜGGVÉNYEK (HELPER FUNCTIONS)
            ========================================================================== */
+
+        /**
+         * Segédfüggvény: Ha a blokk szövegében '0' (nulla) számjegy található,
+         * azt automatikusan áthúzza (line-through), ahogyan a felhasználói elvárás kéri.
+         */
+        function formatZero(text) {
+            if (!text) return '';
+            return text.toString().replace(/0/g, '<span class="zero-strike">0</span>');
+        }
 
         /**
          * Automatikusan kiszámolja, hogy fekete vagy fehér szöveg illik-e a blokk hátteréhez.
@@ -336,10 +355,10 @@
             nextIndex = minSpawn + Math.floor(Math.random() * (maxSpawn - minSpawn + 1)); 
             if (nextIndex >= config.length) nextIndex = config.length - 1;
             
-            // Kijelző frissítése
+            // Kijelző frissítése (áthúzott nullákkal)
             const nextEl = document.getElementById('next-block');
-            nextEl.innerText = config[nextIndex].v;
-            nextEl.style.backgroundColor = config[nextIndex].c;
+            nextEl.innerHTML = config[nextIndex] ? formatZero(config[nextIndex].v) : '?';
+            nextEl.style.backgroundColor = config[nextIndex] ? config[nextIndex].c : '#fff';
             nextEl.style.color = getTextColor(config[nextIndex].c);
         }
 
@@ -355,8 +374,8 @@
                 columns[i].forEach(valIndex => {
                     const block = document.createElement('div');
                     block.className = 'block';
-                    // Ha érvényes a blokk, megjelenítjük az értékét és színét
-                    block.innerText = config[valIndex] ? config[valIndex].v : '?';
+                    // Ha érvényes a blokk, megjelenítjük az értékét (áthúzott nullákkal) és színét
+                    block.innerHTML = config[valIndex] ? formatZero(config[valIndex].v) : '?';
                     block.style.backgroundColor = config[valIndex] ? config[valIndex].c : '#fff';
                     block.style.color = config[valIndex] ? getTextColor(config[valIndex].c) : '#000';
                     colEl.appendChild(block);
@@ -461,14 +480,14 @@
 
         /**
          * Automatikus mentés: Eltárolja a tömböt, pontszámot ÉS a blokkok szöveges értékét is,
-         * így a jövőbeli verziók (v0.6, v0.7) új számainál sem csúsznak el a blokkok!
+         * így a jövőbeli verziók (v0.7, v0.8) új számainál sem csúsznak el a blokkok!
          */
         function autoSave() {
             // Átalakítjuk a szám-indexeket szöveges értékekké a biztonságos mentéshez
             const stringColumns = columns.map(col => col.map(idx => config[idx] ? config[idx].v : null));
 
             const dataToSave = {
-                version: "0.5",
+                version: "0.6",
                 columns: columns,            // Indexek
                 stringColumns: stringColumns,// Szöveges értékek (pl. "32T", "∞") - JÖVŐÁLLÓSÁG!
                 score: score,
@@ -505,7 +524,7 @@
                     // 1. ESET: Jövőálló szöveges mentés betöltése (stringColumns)
                     if (data.stringColumns && Array.isArray(data.stringColumns)) {
                         columns = data.stringColumns.map(col => col.map(valStr => {
-                            // Megkeressük a szöveg alapján az új v0.5 config tömbbéli indexét
+                            // Megkeressük a szöveg alapján az új v0.6 config tömbbéli indexét
                             let foundIdx = config.findIndex(c => c.v === valStr);
                             return foundIdx !== -1 ? foundIdx : 0;
                         }));
@@ -541,9 +560,9 @@
 
                     render(); // Pálya kirajzolása
 
-                    // Következő blokk kijelzőjének frissítése
+                    // Következő blokk kijelzőjének frissítése (áthúzott nullákkal)
                     const nextEl = document.getElementById('next-block');
-                    nextEl.innerText = config[nextIndex] ? config[nextIndex].v : '?';
+                    nextEl.innerHTML = config[nextIndex] ? formatZero(config[nextIndex].v) : '?';
                     nextEl.style.backgroundColor = config[nextIndex] ? config[nextIndex].c : '#fff';
                     nextEl.style.color = config[nextIndex] ? getTextColor(config[nextIndex].c) : '#000';
 
