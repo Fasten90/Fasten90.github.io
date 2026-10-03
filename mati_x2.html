@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>X2 Blocks - Végtelen Mód v0.4</title>
+    <title>X2 Blocks - Végtelen Mód v0.5</title>
     <style>
         /* Alapvető oldalbeállítások / Basic page styling */
         body { 
@@ -175,7 +175,7 @@
     <!-- Pontszám és Verzió léce -->
     <div id="score-board">
         <span>Pont: <span id="score-val">0</span></span>
-        <span class="version-tag">v0.4</span>
+        <span class="version-tag">v0.5</span>
     </div>
 
     <!-- Menü gombok -->
@@ -210,7 +210,20 @@
 
     <script>
         /* ==========================================================================
-           1. BEÁLLÍTÁSOK ÉS SZÁM-TÁBLÁZAT (CONFIG)
+           MÁTI X2 BLOCKS - FEJLESZTÉSI ÉS KÓDOLÁSI SZABÁLYOK (DEVELOPMENT GUIDELINES)
+           ==========================================================================
+           1. KOMMENTEK: Minden függvény, logikai lépés és beállítás részletesen 
+              fel van kommentelve magyarul. Tilos a kommentek törlése/ritkítása!
+              Minden új kódmódosításnál bővíteni kell a magyarázó megjegyzéseket.
+           2. VERZIÓZÁS: Jelenlegi verzió: v0.5. Új számok vagy funkciók hozzáadásakor
+              a verziószámot emelni kell az HTML fejlécre és a mentési állományba is.
+           3. VISSZAFELE KOMPATIBILITÁS: A mentés 'stringColumns' alapon működik
+              (szöveges értékek tárolása), így a jövőbeli verziókban (v0.6, v0.7...)
+              új számok beszúrásakor SEM csúszhatnak el a játékos meglévő blokkjai.
+           ========================================================================== */
+
+        /* ==========================================================================
+           1. BEÁLLÍTÁSOK ÉS SZÁM-TÁBLÁZAT (CONFIG - v0.5)
            Itt található az összes blokk értéke (v) és háttérszíne (c) sorrendben.
            ========================================================================== */
         const config = [
@@ -238,12 +251,24 @@
             { v: "258Q", c: "#CCBB00" }, // Index 21 (32T színe)
             { v: "516Q", c: "#D8BFD8" }, // Index 22 (64T színe)
             { v: "1U",   c: "#FF0000" }, // Index 23 (128T színe)
-            { v: "∞",    c: "#FFFFFF" }  // Index 24 (Végtelen jel, fehér háttérrel)
+            
+            /* --- ÚJ SZÁMOK v0.5 BRANCS --- */
+            { v: "2U",   c: "#F0FFFF" }, // Index 24 (257T színe)
+            { v: "4U",   c: "#00008B" }, // Index 25 (514T színe)
+            { v: "6U",   c: "#FFB6C1" }, // Index 26 (1Q színe - 4U duplázódás elkerülésére 6U)
+            { v: "8U",   c: "#808080" }, // Index 27 (2Q színe)
+            { v: "16U",  c: "#ADD8E6" }, // Index 28 (4Q színe)
+            { v: "32U",  c: "#FFFF00" }, // Index 29 (8Q színe)
+            { v: "65U",  c: "#FFA500" }, // Index 30 (16Q színe)
+            { v: "130U", c: "#00008B" }, // Index 31 (32Q színe)
+            
+            /* --- VÉGTELEN MÓD ZÁRÓ BLOKK --- */
+            { v: "∞",    c: "#90EE90" }  // Index 32 (Végtelen jel, 64Q zöld színével)
         ];
 
         /* Mentési kulcsok a böngésző tárhelyéhez (localStorage) */
-        const SAVE_KEY = 'mati_x2_universal_save'; // Új, jövőálló mentési kulcs
-        const LEGACY_KEYS = ['mati_x2_v5', 'mati_x2_v4', 'mati_x2_v3']; // Régi verziók mentései
+        const SAVE_KEY = 'mati_x2_universal_save'; // Univerzális mentési kulcs
+        const LEGACY_KEYS = ['mati_x2_v5', 'mati_x2_v4', 'mati_x2_v3']; // Korábbi tesztverziók mentései
 
         /* ==========================================================================
            2. JÁTÉK ÁLLAPOT VÁLTOZÓI (GAME STATE)
@@ -263,7 +288,7 @@
 
         /**
          * Automatikusan kiszámolja, hogy fekete vagy fehér szöveg illik-e a blokk hátteréhez.
-         * Így a sötétkék/piros háttereken fehér, a sárga/fehér háttereken fekete lesz a betű.
+         * Így a sötétkék/piros háttereken fehér, a sárga/zöld háttereken fekete lesz a betű.
          */
         function getTextColor(hex) {
             if (!hex) return '#000';
@@ -436,14 +461,14 @@
 
         /**
          * Automatikus mentés: Eltárolja a tömböt, pontszámot ÉS a blokkok szöveges értékét is,
-         * így a jövőbeli frissítések (v0.5, v0.6) sosem fogják elrontani a mentést!
+         * így a jövőbeli verziók (v0.6, v0.7) új számainál sem csúsznak el a blokkok!
          */
         function autoSave() {
             // Átalakítjuk a szám-indexeket szöveges értékekké a biztonságos mentéshez
             const stringColumns = columns.map(col => col.map(idx => config[idx] ? config[idx].v : null));
 
             const dataToSave = {
-                version: "0.4",
+                version: "0.5",
                 columns: columns,            // Indexek
                 stringColumns: stringColumns,// Szöveges értékek (pl. "32T", "∞") - JÖVŐÁLLÓSÁG!
                 score: score,
@@ -462,7 +487,7 @@
             let rawData = localStorage.getItem(SAVE_KEY);
             let legacyKeyFound = null;
 
-            // Ha az új univerzális kulcson nincs mentés, megnézzük a régi kulcsokat
+            // Ha az új univerzális kulcson nincs mentés, megnézzük a régi tesztkulcsokat
             if (!rawData) {
                 for (let key of LEGACY_KEYS) {
                     rawData = localStorage.getItem(key);
@@ -477,21 +502,20 @@
                 try {
                     const data = JSON.parse(rawData);
                     
-                    // 1. ESET: Ha van jövőálló szöveges mentésünk (stringColumns)
+                    // 1. ESET: Jövőálló szöveges mentés betöltése (stringColumns)
                     if (data.stringColumns && Array.isArray(data.stringColumns)) {
                         columns = data.stringColumns.map(col => col.map(valStr => {
-                            // Megkeressük a szöveg alapján a mostani config tömbbéli indexét
+                            // Megkeressük a szöveg alapján az új v0.5 config tömbbéli indexét
                             let foundIdx = config.findIndex(c => c.v === valStr);
                             return foundIdx !== -1 ? foundIdx : 0;
                         }));
                     }
-                    // 2. ESET: Régebbi mentés betöltése index-eltolás korrekcióval
+                    // 2. ESET: Régebbi indexes mentés betöltése
                     else if (data.columns && Array.isArray(data.columns)) {
                         columns = data.columns.map(col => col.map(idx => {
-                            // Korábbi v5-ös mentésnél a 19-es index volt a Végtelen (∞)
-                            if (legacyKeyFound === 'mati_x2_v5' && idx === 19) return 24;
-                            // Korábbi v4-es mentésnél a 23-as index volt a Végtelen (∞)
-                            if (legacyKeyFound === 'mati_x2_v4' && idx === 23) return 24;
+                            // Ha a régi verzióban a Végtelen (∞) volt a legutolsó elem
+                            if (legacyKeyFound === 'mati_x2_v5' && idx === 19) return config.length - 1;
+                            if (legacyKeyFound === 'mati_x2_v4' && idx === 23) return config.length - 1;
                             return Math.min(idx, config.length - 1);
                         }));
                     } else {
@@ -500,10 +524,15 @@
 
                     score = data.score || 0;
                     maxRecord = data.maxRecord || 0;
-                    
+
+                    // Frissítjük a maxRecord-ot az aktuális pálya legnagyobb eleméhez
+                    columns.forEach(col => col.forEach(val => {
+                        if (val > maxRecord) maxRecord = val;
+                    }));
+
                     cleanBoard(); // Pálya letakarítása
                     
-                    // Következő blokk ellenőrzése
+                    // Következő blokk beállítása
                     if (typeof data.nextIndex === 'number' && data.nextIndex < config.length) {
                         nextIndex = data.nextIndex;
                     } else {
