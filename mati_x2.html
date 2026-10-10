@@ -2,9 +2,11 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>X2 Blocks - Végtelen Mód v0.8</title>
+    <title>X2 Blocks - Végtelen Mód v0.81</title>
     <style>
-        /* Alapvető oldalbeállítások / Basic page styling */
+        /* ==========================================================================
+           ALAPVETŐ OLDALBEÁLLÍTÁSOK ÉS STÍLUSOK (BASIC PAGE STYLING)
+           ========================================================================== */
         body { 
             background: #1a1a1a; 
             color: white; 
@@ -16,7 +18,7 @@
             padding: 10px; 
         }
 
-        /* Felső menüsor (Mentés, Betöltés, Új játék gombok) */
+        /* Felső menüsor konténer (Mentés, Betöltés, Új játék gombok elhelyezése) */
         .menu { 
             margin-bottom: 15px; 
             display: flex; 
@@ -25,7 +27,7 @@
             justify-content: center; 
         }
 
-        /* Általános gomb stílusok */
+        /* Általános gomb stílusok a menühöz */
         button { 
             padding: 8px 12px; 
             cursor: pointer; 
@@ -37,10 +39,10 @@
             font-size: 12px; 
         }
 
-        /* Új játék gomb egyedi piros színe */
+        /* Új játék gomb egyedi, figyelemfelkeltő piros színe */
         .btn-reset { background: #8b0000; }
 
-        /* Pontszám és verziószám kijelző sáv */
+        /* Pontszám és verziószám kijelző sáv a képernyő tetején */
         #score-board { 
             font-size: 18px; 
             margin-bottom: 10px; 
@@ -51,14 +53,18 @@
             gap: 10px; 
         }
 
-        /* Kis szürke verzió felirat a pontszám mellett */
+        /* Kis szürke verzió felirat a pontszám mellett (v0.81) */
         .version-tag { 
             font-size: 12px; 
             color: #888; 
             font-weight: normal; 
         }
 
-        /* A játéktér kerete (320px széles, 450px magas) */
+        /* ==========================================================================
+           JÁTÉKTÉR ÉS BLOKKOK VIZUÁLIS MEGJELENÍTÉSE (GAME BOARD & BLOCKS)
+           ========================================================================== */
+           
+        /* A játéktér kerete (320px széles, 450px magas, sötét háttérrel) */
         #game-container { 
             position: relative; 
             width: 320px; 
@@ -68,7 +74,7 @@
             display: flex; 
         }
 
-        /* A játék 5 oszlopa. Alulról felfelé építkeznek (flex-direction: column-reverse) */
+        /* A játék 5 oszlopa. Alulról felfelé építkeznek a flex-direction: column-reverse miatt */
         .column { 
             flex: 1; 
             border-right: 1px solid #444; 
@@ -79,7 +85,7 @@
         }
         .column:last-child { border-right: none; }
 
-        /* Egyetlen játékkocka/blokk stílusa */
+        /* Egyetlen játékkocka/blokk általános stílusa */
         .block { 
             width: 100%; 
             min-height: 10px; 
@@ -92,10 +98,10 @@
             border: 1px solid rgba(0,0,0,0.2); 
             font-size: clamp(10px, 3vw, 14px); 
             box-sizing: border-box; 
-            animation: drop 0.15s ease-out; /* Bekattintáskor finom leeső animáció */
+            animation: drop 0.15s ease-out; /* Finom leeső animáció bedobáskor */
         }
 
-        /* Áthúzott nulla (0) formázó osztály */
+        /* Speciális formázás: a számokban előforduló '0' (nulla) áthúzása */
         .zero-strike {
             text-decoration: line-through;
             display: inline-block;
@@ -107,7 +113,7 @@
             to { transform: translateY(0); opacity: 1; } 
         }
 
-        /* A következő kilőhető kocka konténere */
+        /* A következő kilőhető kocka előnézeti konténere */
         #next-container { 
             display: flex; 
             flex-direction: column; 
@@ -125,9 +131,13 @@
             border: 3px solid #fff; 
         }
 
-        /* Rekordváltáskor megjelenő fehér felugró ablak háttere (sötétített háttér) */
+        /* ==========================================================================
+           REKORDVÁLTÓ FEHÉR FELUGRÓ ABLAK (MODAL DIALOG STYLING)
+           ========================================================================== */
+           
+        /* Sötétített háttér az ablak mögött */
         #modal-overlay {
-            display: none; /* Alapból rejtve van */
+            display: none; /* Alapból rejtve van, csak rekordváltáskor kapcsol be */
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
@@ -137,7 +147,7 @@
             align-items: center;
         }
 
-        /* A kis fehér kártya/kocka a képernyő közepén */
+        /* A kis fehér kártya/doboz a képernyő közepén */
         #modal-box {
             background: #ffffff;
             color: #000000;
@@ -152,7 +162,7 @@
             gap: 15px;
         }
 
-        /* A felugró ablakban lévő szöveg stílusa */
+        /* A felugró ablakban lévő interaktív szöveg stílusa */
         #modal-text {
             font-size: 16px;
             font-weight: bold;
@@ -178,26 +188,26 @@
 </head>
 <body>
 
-    <!-- Pontszám és Verzió léce -->
+    <!-- Pontszám és Verziószám fejléc -->
     <div id="score-board">
         <span>Pont: <span id="score-val">0</span></span>
-        <span class="version-tag">v0.8</span>
+        <span class="version-tag">v0.81</span>
     </div>
 
-    <!-- Menü gombok -->
+    <!-- Játékon belüli főmenü gombjai -->
     <div class="menu">
         <button onclick="saveGame()">Mentés</button>
         <button onclick="loadGame()">Betöltés</button>
         <button class="btn-reset" onclick="resetGame()">Új játék</button>
     </div>
 
-    <!-- Következő kilőhető blokk kijelzője -->
+    <!-- Következő kilövésre váró blokk kijelzése -->
     <div id="next-container">
         <div style="font-size: 14px; margin-bottom: 5px;">Következő:</div>
         <div id="next-block"></div>
     </div>
 
-    <!-- A játék 5 kattintható oszlopa -->
+    <!-- A játék 5 kattintható oszlopa (itt történik a blokkok lövése) -->
     <div id="game-container">
         <div class="column" onclick="shoot(0)"></div>
         <div class="column" onclick="shoot(1)"></div>
@@ -206,7 +216,7 @@
         <div class="column" onclick="shoot(4)"></div>
     </div>
 
-    <!-- Fehér felugró ablak rekordváltáskor -->
+    <!-- Rekordváltáskor megjelenő 3 lépéses felugró ablak -->
     <div id="modal-overlay">
         <div id="modal-box">
             <div id="modal-text"></div>
@@ -218,22 +228,23 @@
         /* ==========================================================================
            MÁTI X2 BLOCKS - FEJLESZTÉSI ÉS KÓDOLÁSI SZABÁLYOK (DEVELOPMENT GUIDELINES)
            ==========================================================================
-           1. KOMMENTEK: Minden függvény, logikai lépés és beállítás részletesen 
-              fel van kommentelve magyarul. Tilos a kommentek törlése/ritkítása!
-              Minden új kódmódosításnál bővíteni kell a magyarázó megjegyzéseket.
-           2. VERZIÓZÁS: Jelenlegi verzió: v0.8. Új számok vagy funkciók hozzáadásakor
-              a verziószámot emelni kell a HTML fejlécre és a mentési állományba is.
-           3. VISSZAFELE KOMPATIBILITÁS: A mentés 'stringColumns' alapon működik
-              (szöveges értékek tárolása), így a jövőbeli verziókban (v0.9, v1.0...)
-              új számok beszúrásakor SEM csúszhatnak el a játékos meglévő blokkjai.
-           4. DÍSZTÉS ÉS FORMÁZÁS: A megjelenítésnél a '0' (nulla) karakterek 
-              automatikusan áthúzásra kerülnek a 'formatZero()' segédfüggvény által.
-           5. HANGEFFEKTEK: A Web Audio API segítségével beépített, halk szintetizált
-              hangok szólnak kilövéskor és összevonódáskor (külső fájlok nélkül).
+           1. KOMMENTEK SZIGORÚ MEGŐRZÉSE: Minden egyes függvény, változó és logikai 
+              lépés részletesen fel van kommentelve magyarul ÉS angolul. Tilos a korábbi 
+              magyarázó megjegyzések törlése! Új funkcióknál csak bővíteni szabad.
+           2. VERZIÓZÁS ÉS KÖVETHETŐSÉG: Jelenlegi verzió: v0.81. Minden újabb szám 
+              vagy logikai változtatás esetén frissíteni kell a verziószámot.
+           3. VISSZAFELE ÉS JÖVŐBELE KOMPATIBILITÁS: A mentési rendszer szöveges alapon
+              ('stringColumns') tárolja a blokkokat. Ez biztosítja, hogy a jövőbeli 
+              frissítések során (v0.9, v1.0) új számok beszúrásakor se csússzanak el 
+              a játékos meglévő mentései.
+           4. VIZUÁLIS SPECIÁLITÁSOK: A 'formatZero()' segédfüggvény automatikusan 
+              áthúzza a számokban előforduló összes '0' (nulla) karaktert.
+           5. BEÉPÍTETT HANGEFFEKTEK: A Web Audio API segítségével külső fájlok nélkül,
+              programozottan generálódnak a halk kattintó és pattanó hangok.
            ========================================================================== */
 
         /* ==========================================================================
-           1. BEÁLLÍTÁSOK ÉS SZÁM-TÁBLÁZAT (CONFIG - v0.8)
+           1. BEÁLLÍTÁSOK ÉS SZÁM-TÁBLÁZAT (CONFIG - v0.81)
            Itt található az összes blokk értéke (v) és háttérszíne (c) sorrendben.
            ========================================================================== */
         const config = [
@@ -287,33 +298,33 @@
             { v: "8I",   c: "#A52A2A" }, // Index 47 (1O színén)
             { v: "17I",  c: "#CCBB00" }, // Index 48 (2O színén)
             { v: "34I",  c: "#D8BFD8" }, // Index 49 (4O színén)
-            { v: "∞",    c: "#CCBB00" }  // Index 50 (Végtelen jel)
+            { v: "∞",    c: "#CCBB00" }  // Index 50 (Végtelen jel, 258Q / 2O színével)
         ];
 
-        /* Mentési kulcsok a böngésző tárhelyéhez (localStorage) */
-        const SAVE_KEY = 'mati_x2_universal_save'; // Univerzális mentési kulcs
-        const LEGACY_KEYS = ['mati_x2_v5', 'mati_x2_v4', 'mati_x2_v3']; // Korábbi tesztverziók mentései
+        /* Mentési kulcsok a böngésző helyi tárhelyéhez (localStorage) */
+        const SAVE_KEY = 'mati_x2_universal_save'; // Univerzális, jövőálló mentési kulcs
+        const LEGACY_KEYS = ['mati_x2_v5', 'mati_x2_v4', 'mati_x2_v3']; // Régi tesztverziók kulcsai a migrációhoz
 
         /* ==========================================================================
-           2. JÁTÉK ÁLLAPOT VÁLTOZÓI (GAME STATE)
+           2. JÁTÉK ÁLLAPOT VÁLTOZÓI (GAME STATE VARIABLES)
            ========================================================================== */
-        let columns = [[], [], [], [], []]; // A 5 oszlop tartalma (a blokkok indexei)
-        let nextIndex = 0;                  // A következő kilőhető blokk indexe
-        let score = 0;                      // Jelenlegi pontszám
-        let maxRecord = 0;                  // Az eddig elért legmagasabb blokk indexe
+        let columns = [[], [], [], [], []]; // A 5 játéktéri oszlop adatai (blokkok indexei)
+        let nextIndex = 0;                  // A fentről következően kilőhető blokk indexe
+        let score = 0;                      // Játékos aktuális pontszáma
+        let maxRecord = 0;                  // Az eddig elért legmagasabb blokk indexe a pályán
         
-        let minSpawn = 0;                   // A legkisebb véletlenszerűen sorsolható blokk indexe
-        let maxSpawn = 3;                   // A legnagyobb véletlenszerűen sorsolható blokk indexe
-        let recordBrokenThisTurn = false;   // Jelzi, ha az adott lövésben új rekord született
+        let minSpawn = 0;                   // A sorsolható alsó blokk index határ
+        let maxSpawn = 3;                   // A sorsolható felső blokk index határ
+        let recordBrokenThisTurn = false;   // Logikai kapcsoló: jelzi, ha ebben a körben rekord dőlt
 
         /* ==========================================================================
-           3. HANGEFFEKTEK KEZELÉSE (WEB AUDIO API)
+           3. HANGEFFEKTEK KEZELÉSE (WEB AUDIO API SOUND SYSTEM)
            ========================================================================== */
         let audioCtx = null;
 
         /**
-         * Inicializálja az AudioContext-et (a böngésző biztonsági előírásai miatt 
-         * csak az első felhasználói kattintás után indulhat el).
+         * Inicializálja az AudioContext-et. A böngésző biztonsági irányelvei miatt
+         * ez kizárólag az első felhasználói interakció (kattintás) után indulhat el.
          */
         function initAudio() {
             if (!audioCtx) {
@@ -325,7 +336,7 @@
         }
 
         /**
-         * Klikk szerű halk hang összevonódáskor (magasabb, tiszta tónus).
+         * Klikk szerű halk hang összevonódáskor (magasabb, tiszta frekvenciájú tónus).
          */
         function playClickSound() {
             try {
@@ -336,7 +347,7 @@
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(800, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.04);
-                gain.gain.setValueAtTime(0.04, audioCtx.currentTime); // Nagyon halk
+                gain.gain.setValueAtTime(0.04, audioCtx.currentTime); // Nagyon halk hangerő
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
@@ -346,7 +357,7 @@
         }
 
         /**
-         * "K" betű szerű / tompa pattanó halk hang blokk leesésekor/kilövéskor.
+         * "K" betű szerű / tompa pattanó halk hang blokk leesésekor vagy kilövésekor.
          */
         function playDropSound() {
             try {
@@ -357,7 +368,7 @@
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(250, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.06);
-                gain.gain.setValueAtTime(0.06, audioCtx.currentTime); // Nagyon halk
+                gain.gain.setValueAtTime(0.06, audioCtx.currentTime); // Nagyon halk hangerő
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
@@ -367,12 +378,12 @@
         }
 
         /* ==========================================================================
-           4. SEGÉDFÜGGVÉNYEK (HELPER FUNCTIONS)
+           4. SEGÉDFÜGGVÉNYEK ÉS LOGIKAI VEZÉRLŐK (HELPER FUNCTIONS)
            ========================================================================== */
 
         /**
          * Segédfüggvény: Ha a blokk szövegében '0' (nulla) számjegy található,
-         * azt automatikusan áthúzza (line-through), ahogyan a felhasználói elvárás kéri.
+         * azt automatikusan áthúzza (line-through), ahogyan a felhasználó kérte.
          */
         function formatZero(text) {
             if (!text) return '';
@@ -380,8 +391,8 @@
         }
 
         /**
-         * Automatikusan kiszámolja, hogy fekete vagy fehér szöveg illik-e a blokk hátteréhez.
-         * Így a sötétkék/piros háttereken fehér, a sárga/zöld háttereken fekete lesz a betű.
+         * Intelligens betűszín-választó: kiszámolja a háttérszín (hex) világosságát,
+         * és fekete vagy fehér szövegszínt ad vissza a tökéletes olvashatóságért.
          */
         function getTextColor(hex) {
             if (!hex) return '#000';
@@ -394,8 +405,8 @@
         }
 
         /**
-         * Kiszámolja a pályán lévő legnagyobb blokk alapján, hogy mi lehet a legkisebb
-         * és legnagyobb újonnan fentről érkező (sorsolható) szám.
+         * Kiszámolja a pályán lévő legnagyobb blokk értéke alapján, hogy mi lehet 
+         * a legkisebb és legnagyobb újonnan sorsolható szám (dinamikus nehézség).
          */
         function updateSpawnRange() {
             let maxFound = 0;
@@ -408,7 +419,8 @@
         }
 
         /**
-         * Letakarítja a pályáról a kiesett, túl kicsi számokat.
+         * Pályatakarító: Ha elértünk egy szintet, eltávolítja a túl kicsi számokat
+         * nemcsak a következő lövések közül, hanem a teljes pályáról is.
          */
         function cleanBoard() {
             updateSpawnRange();
@@ -423,6 +435,7 @@
             nextIndex = minSpawn + Math.floor(Math.random() * (maxSpawn - minSpawn + 1)); 
             if (nextIndex >= config.length) nextIndex = config.length - 1;
             
+            // Következő elem doboz frissítése (áthúzott nullákkal)
             const nextEl = document.getElementById('next-block');
             nextEl.innerHTML = config[nextIndex] ? formatZero(config[nextIndex].v) : '?';
             nextEl.style.backgroundColor = config[nextIndex] ? config[nextIndex].c : '#fff';
@@ -430,14 +443,14 @@
         }
 
         /**
-         * Kirajzolja a pályát, az oszlopokat és a pontszámot a képernyőre.
+         * Kirajzolja a teljes játékteret (oszlopokat, blokkokat, pontszámot) a képernyőre.
          */
         function render() {
             document.getElementById('score-val').innerText = score;
             const colElements = document.querySelectorAll('.column');
             
             colElements.forEach((colEl, i) => {
-                colEl.innerHTML = '';
+                colEl.innerHTML = ''; // Oszlop ürítése újrarajzolás előtt
                 columns[i].forEach(valIndex => {
                     const block = document.createElement('div');
                     block.className = 'block';
@@ -450,18 +463,19 @@
         }
 
         /* ==========================================================================
-           5. JÁTÉK MENET ÉS FÚZIÓS LOGIKA (GAMEPLAY & MERGING)
+           5. JÁTÉKMENET ÉS FÚZIÓS LOGIKA (GAMEPLAY & MERGING LOGIC)
            ========================================================================== */
 
         /**
-         * Blokkilövés egy adott oszlopba (0 - 4).
+         * Blokkilövés függvény: a játékos által választott oszlopba (0-4) beteszi a következőt.
          */
         function shoot(col) {
-            playDropSound(); // Hangeffekt lejátszása kilövéskor
+            playDropSound(); // Halk pattanó hang lejátszása lövéskor
             recordBrokenThisTurn = false;
             columns[col].push(nextIndex);
-            checkMerge(col);
+            checkMerge(col); // Összeolvadások ellenőrzése
 
+            // Ha új rekord született, feldobjuk a fehér felugró ablakot
             if (recordBrokenThisTurn) {
                 showRecordModal();
             } else {
@@ -473,49 +487,55 @@
         }
 
         /**
-         * Rekurzív függvény: ellenőrzi az oszlop felső két blokkjának összeolvadását.
+         * Rekurzív fúziós függvény: ellenőrzi az oszlop felső két blokkjának egyezőségét.
+         * Ha azonosak, duplázza őket, pontot ad, és újraellenőrzi láncreakcióhoz.
          */
         function checkMerge(col) {
             let colData = columns[col];
             if (colData.length < 2) return;
             
+            // Ha a legfelső két blokk értéke megegyezik
             if (colData[colData.length - 1] === colData[colData.length - 2]) {
                 let last = colData.pop();
                 
-                // Hangeffekt hívása összevonódáskor
-                playClickSound();
+                playClickSound(); // Halk klikkelő hang lejátszása fúziónál
                 
+                // KÜLÖNLEGES ESET: Végtelen fúzió (∞ + ∞ = ∞)
                 if (last === config.length - 1) {
                     colData[colData.length - 1] = last;
-                    score += 50000;
+                    score += 50000; // Nagy bónuszpont végtelen találatkor
                     checkMerge(col);
                 } 
+                // NORMÁL ESET: Érték növelése a következő szintre
                 else if (last < config.length - 1) {
                     let newIndex = last + 1;
                     colData[colData.length - 1] = newIndex;
                     score += (newIndex + 1) * 20;
 
+                    // Ellenőrzés, hogy elérte-e a 32T-t (index 8) és új rekord-e
                     if (newIndex >= 8 && newIndex > maxRecord) {
                         maxRecord = newIndex;
                         recordBrokenThisTurn = true;
                     }
 
-                    checkMerge(col);
+                    checkMerge(col); // Rekurzív hívás láncreakcióhoz
                 }
             }
         }
 
         /* ==========================================================================
-           6. REKORDVÁLTÓ FEHÉR ABLAK LOGIKA (MODAL DIALOG)
+           6. REKORDVÁLTÓ FEHÉR ABLAK VEZÉRLÉSE (MODAL DIALOG FLOW)
            ========================================================================== */
-        let modalStep = 0;
+        let modalStep = 0; // Nyomon követi a 3 lépéses párbeszéd aktuális fázisát
 
+        // Megjeleníti az 1. lépést ("Rekordot váltottál!")
         function showRecordModal() {
             modalStep = 1;
             document.getElementById('modal-text').innerText = "Rekordot váltottál!";
             document.getElementById('modal-overlay').style.display = "flex";
         }
 
+        // Az OK gomb megnyomására lépteti a szöveget a soron következő üzenetre
         function advanceModal() {
             if (modalStep === 1) {
                 modalStep = 2;
@@ -525,7 +545,9 @@
                 document.getElementById('modal-text').innerText = "Törlődik a legkisebb szám.";
             } else if (modalStep === 3) {
                 modalStep = 0;
-                document.getElementById('modal-overlay').style.display = "none";
+                document.getElementById('modal-overlay').style.display = "none"; // Bezárás
+                
+                // Utolsó OK után lefut a pálya tisztítása és a mentés
                 cleanBoard();
                 updateNext();
                 render();
@@ -534,16 +556,20 @@
         }
 
         /* ==========================================================================
-           7. MENTÉS ÉS BETÖLTÉS (JÖVŐÁLLÓ & COMPATIBLE LOCALSTORAGE)
+           7. MENTÉSI ÉS BETÖLTÉSI RENDSZER (JÖVŐÁLLÓ LOCALSTORAGE)
            ========================================================================== */
 
+        /**
+         * Automatikus mentés: Eltárolja az oszlopok indexeit ÉS a szöveges blokk-értékeket
+         * ('stringColumns') is, így a jövőbeli frissítések (v0.9, v1.0) sosem rontják el a mentést.
+         */
         function autoSave() {
             const stringColumns = columns.map(col => col.map(idx => config[idx] ? config[idx].v : null));
 
             const dataToSave = {
-                version: "0.8",
+                version: "0.81",
                 columns: columns,
-                stringColumns: stringColumns,
+                stringColumns: stringColumns, // Ez biztosítja a jövőbeli kompatibilitást!
                 score: score,
                 nextIndex: nextIndex,
                 maxRecord: maxRecord
@@ -551,8 +577,16 @@
             localStorage.setItem(SAVE_KEY, JSON.stringify(dataToSave));
         }
 
-        function saveGame() { autoSave(); alert("Mentve!"); }
+        // Gombnyomásra történő mentés értesítéssel
+        function saveGame() { 
+            autoSave(); 
+            alert("Mentve!"); 
+        }
 
+        /**
+         * Intelligens betöltés: Ellenőrzi az új univerzális kulcsot, ha nincs, migrálja
+         * a régebbi verziók mentéseit is, hogy a játékos ne veszítse el a játékállását.
+         */
         function loadGame() {
             let rawData = localStorage.getItem(SAVE_KEY);
             let legacyKeyFound = null;
@@ -571,12 +605,14 @@
                 try {
                     const data = JSON.parse(rawData);
                     
+                    // 1. ESET: Jövőálló szöveges alapú betöltés (stringColumns)
                     if (data.stringColumns && Array.isArray(data.stringColumns)) {
                         columns = data.stringColumns.map(col => col.map(valStr => {
                             let foundIdx = config.findIndex(c => c.v === valStr);
                             return foundIdx !== -1 ? foundIdx : 0;
                         }));
                     }
+                    // 2. ESET: Régebbi index-alapú mentések konvertálása
                     else if (data.columns && Array.isArray(data.columns)) {
                         columns = data.columns.map(col => col.map(idx => {
                             if (legacyKeyFound === 'mati_x2_v5' && idx === 19) return config.length - 1;
@@ -590,6 +626,7 @@
                     score = data.score || 0;
                     maxRecord = data.maxRecord || 0;
 
+                    // Maximális rekord frissítése a betöltött tábla alapján
                     columns.forEach(col => col.forEach(val => {
                         if (val > maxRecord) maxRecord = val;
                     }));
@@ -604,11 +641,13 @@
 
                     render();
 
+                    // Következő elem kijelzőjének frissítése (áthúzott nullákkal)
                     const nextEl = document.getElementById('next-block');
                     nextEl.innerHTML = config[nextIndex] ? formatZero(config[nextIndex].v) : '?';
                     nextEl.style.backgroundColor = config[nextIndex] ? config[nextIndex].c : '#fff';
                     nextEl.style.color = config[nextIndex] ? getTextColor(config[nextIndex].c) : '#000';
 
+                    // Ha régi kulcsból mentettük át, azonnal elmentjük az új univerzális formátumban is
                     if (legacyKeyFound) {
                         autoSave();
                     }
@@ -618,6 +657,9 @@
             }
         }
 
+        /**
+         * Új játék indítása: figyelmeztetés után törli a mentéseket és nullázza a pályát.
+         */
         function resetGame() {
             if(confirm("Új pálya?")) {
                 columns = [[], [], [], [], []];
@@ -633,9 +675,10 @@
         }
 
         /* ==========================================================================
-           8. JÁTÉK INDÍTÁSA (INITIALIZATION)
+           8. JÁTÉK INDÍTÁSA ÉS INICIALIZÁCIÓ (INITIALIZATION)
            ========================================================================== */
         loadGame();
+        // Ha betöltés után üres a pálya, legeneráljuk az első elemet és kirajzoljuk
         if (columns.every(c => c.length === 0)) {
             updateNext();
             render();
