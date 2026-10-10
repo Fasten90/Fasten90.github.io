@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>X2 Blocks - Végtelen Mód v0.6</title>
+    <title>X2 Blocks - Végtelen Mód v0.7</title>
     <style>
         /* Alapvető oldalbeállítások / Basic page styling */
         body { 
@@ -181,7 +181,7 @@
     <!-- Pontszám és Verzió léce -->
     <div id="score-board">
         <span>Pont: <span id="score-val">0</span></span>
-        <span class="version-tag">v0.6</span>
+        <span class="version-tag">v0.7</span>
     </div>
 
     <!-- Menü gombok -->
@@ -221,17 +221,17 @@
            1. KOMMENTEK: Minden függvény, logikai lépés és beállítás részletesen 
               fel van kommentelve magyarul. Tilos a kommentek törlése/ritkítása!
               Minden új kódmódosításnál bővíteni kell a magyarázó megjegyzéseket.
-           2. VERZIÓZÁS: Jelenlegi verzió: v0.6. Új számok vagy funkciók hozzáadásakor
+           2. VERZIÓZÁS: Jelenlegi verzió: v0.7. Új számok vagy funkciók hozzáadásakor
               a verziószámot emelni kell a HTML fejlécre és a mentési állományba is.
            3. VISSZAFELE KOMPATIBILITÁS: A mentés 'stringColumns' alapon működik
-              (szöveges értékek tárolása), így a jövőbeli verziókban (v0.7, v0.8...)
+              (szöveges értékek tárolása), így a jövőbeli verziókban (v0.8, v0.9...)
               új számok beszúrásakor SEM csúszhatnak el a játékos meglévő blokkjai.
            4. DÍSZTÉS ÉS FORMÁZÁS: A megjelenítésnél a '0' (nulla) karakterek 
               automatikusan áthúzásra kerülnek a 'formatZero()' segédfüggvény által.
            ========================================================================== */
 
         /* ==========================================================================
-           1. BEÁLLÍTÁSOK ÉS SZÁM-TÁBLÁZAT (CONFIG - v0.6)
+           1. BEÁLLÍTÁSOK ÉS SZÁM-TÁBLÁZAT (CONFIG - v0.7)
            Itt található az összes blokk értéke (v) és háttérszíne (c) sorrendben.
            ========================================================================== */
         const config = [
@@ -267,13 +267,29 @@
             { v: "32U",  c: "#FFFF00" }, // Index 29 (8Q színe)
             { v: "65U",  c: "#FFA500" }, // Index 30 (16Q színe)
             { v: "130U", c: "#00008B" }, // Index 31 (32Q színe)
-            
-            /* --- ÚJ SZÁMOK v0.6 BRANCS --- */
             { v: "260U", c: "#90EE90" }, // Index 32 (64Q színe)
             { v: "520U", c: "#A52A2A" }, // Index 33 (129Q színe)
             
+            /* --- ÚJ SZÁMOK v0.7 BRANCS --- */
+            { v: "1O",   c: "#A52A2A" }, // Index 34 (129Q színén)
+            { v: "2O",   c: "#CCBB00" }, // Index 35 (258Q színén)
+            { v: "4O",   c: "#D8BFD8" }, // Index 36 (516Q színén)
+            { v: "8O",   c: "#FF0000" }, // Index 37 (1U színén)
+            { v: "16O",  c: "#F0FFFF" }, // Index 38 (2U színén)
+            { v: "33O",  c: "#00008B" }, // Index 39 (4U színén)
+            { v: "66O",  c: "#808080" }, // Index 40 (8U színén)
+            { v: "133O", c: "#ADD8E6" }, // Index 41 (16U színén)
+            { v: "266O", c: "#FFFF00" }, // Index 42 (32U színén)
+            { v: "533O", c: "#FFA500" }, // Index 43 (65U színén)
+            { v: "1I",   c: "#00008B" }, // Index 44 (130U színén)
+            { v: "2I",   c: "#90EE90" }, // Index 45 (260U színén)
+            { v: "4I",   c: "#A52A2A" }, // Index 46 (520U / 530U színén)
+            { v: "8I",   c: "#A52A2A" }, // Index 47 (1O színén)
+            { v: "17I",  c: "#CCBB00" }, // Index 48 (2O színén)
+            { v: "34I",  c: "#D8BFD8" }, // Index 49 (4O színén)
+            
             /* --- VÉGTELEN MÓD ZÁRÓ BLOKK --- */
-            { v: "∞",    c: "#CCBB00" }  // Index 34 (Végtelen jel, 258Q sárga/arany színével)
+            { v: "∞",    c: "#CCBB00" }  // Index 50 (Végtelen jel, 258Q / 2O színével)
         ];
 
         /* Mentési kulcsok a böngésző tárhelyéhez (localStorage) */
@@ -480,14 +496,14 @@
 
         /**
          * Automatikus mentés: Eltárolja a tömböt, pontszámot ÉS a blokkok szöveges értékét is,
-         * így a jövőbeli verziók (v0.7, v0.8) új számainál sem csúsznak el a blokkok!
+         * így a jövőbeli verziók (v0.8, v0.9) új számainál sem csúsznak el a blokkok!
          */
         function autoSave() {
             // Átalakítjuk a szám-indexeket szöveges értékekké a biztonságos mentéshez
             const stringColumns = columns.map(col => col.map(idx => config[idx] ? config[idx].v : null));
 
             const dataToSave = {
-                version: "0.6",
+                version: "0.7",
                 columns: columns,            // Indexek
                 stringColumns: stringColumns,// Szöveges értékek (pl. "32T", "∞") - JÖVŐÁLLÓSÁG!
                 score: score,
@@ -524,7 +540,7 @@
                     // 1. ESET: Jövőálló szöveges mentés betöltése (stringColumns)
                     if (data.stringColumns && Array.isArray(data.stringColumns)) {
                         columns = data.stringColumns.map(col => col.map(valStr => {
-                            // Megkeressük a szöveg alapján az új v0.6 config tömbbéli indexét
+                            // Megkeressük a szöveg alapján az új v0.7 config tömbbéli indexét
                             let foundIdx = config.findIndex(c => c.v === valStr);
                             return foundIdx !== -1 ? foundIdx : 0;
                         }));
