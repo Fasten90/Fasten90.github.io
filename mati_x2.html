@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>X2 Blocks - Végtelen Mód v0.81</title>
+    <title>X2 Blocks - Végtelen Mód v0.9</title>
     <style>
         /* ==========================================================================
            ALAPVETŐ OLDALBEÁLLÍTÁSOK ÉS STÍLUSOK (BASIC PAGE STYLING)
@@ -53,7 +53,7 @@
             gap: 10px; 
         }
 
-        /* Kis szürke verzió felirat a pontszám mellett (v0.81) */
+        /* Kis szürke verzió felirat a pontszám mellett (v0.9) */
         .version-tag { 
             font-size: 12px; 
             color: #888; 
@@ -191,7 +191,7 @@
     <!-- Pontszám és Verziószám fejléc -->
     <div id="score-board">
         <span>Pont: <span id="score-val">0</span></span>
-        <span class="version-tag">v0.81</span>
+        <span class="version-tag">v0.9</span>
     </div>
 
     <!-- Játékon belüli főmenü gombjai -->
@@ -231,11 +231,11 @@
            1. KOMMENTEK SZIGORÚ MEGŐRZÉSE: Minden egyes függvény, változó és logikai 
               lépés részletesen fel van kommentelve magyarul ÉS angolul. Tilos a korábbi 
               magyarázó megjegyzések törlése! Új funkcióknál csak bővíteni szabad.
-           2. VERZIÓZÁS ÉS KÖVETHETŐSÉG: Jelenlegi verzió: v0.81. Minden újabb szám 
+           2. VERZIÓZÁS ÉS KÖVETHETŐSÉG: Jelenlegi verzió: v0.9. Minden újabb szám 
               vagy logikai változtatás esetén frissíteni kell a verziószámot.
            3. VISSZAFELE ÉS JÖVŐBELE KOMPATIBILITÁS: A mentési rendszer szöveges alapon
               ('stringColumns') tárolja a blokkokat. Ez biztosítja, hogy a jövőbeli 
-              frissítések során (v0.9, v1.0) új számok beszúrásakor se csússzanak el 
+              frissítések során (v1.0, v1.1...) új számok beszúrásakor se csússzanak el 
               a játékos meglévő mentései.
            4. VIZUÁLIS SPECIÁLITÁSOK: A 'formatZero()' segédfüggvény automatikusan 
               áthúzza a számokban előforduló összes '0' (nulla) karaktert.
@@ -244,7 +244,7 @@
            ========================================================================== */
 
         /* ==========================================================================
-           1. BEÁLLÍTÁSOK ÉS SZÁM-TÁBLÁZAT (CONFIG - v0.81)
+           1. BEÁLLÍTÁSOK ÉS SZÁM-TÁBLÁZAT (CONFIG - v0.9)
            Itt található az összes blokk értéke (v) és háttérszíne (c) sorrendben.
            ========================================================================== */
         const config = [
@@ -298,7 +298,16 @@
             { v: "8I",   c: "#A52A2A" }, // Index 47 (1O színén)
             { v: "17I",  c: "#CCBB00" }, // Index 48 (2O színén)
             { v: "34I",  c: "#D8BFD8" }, // Index 49 (4O színén)
-            { v: "∞",    c: "#CCBB00" }  // Index 50 (Végtelen jel, 258Q / 2O színével)
+            
+            /* --- ÚJ SZÁMOK v0.9 BRANCS --- */
+            { v: "68I",  c: "#FF0000" }, // Index 50 (8O színén)
+            { v: "146I", c: "#F0FFFF" }, // Index 51 (16O színén)
+            { v: "292I", c: "#00008B" }, // Index 52 (33O színén)
+            { v: "581I", c: "#808080" }, // Index 53 (66O színén)
+            { v: "1H",   c: "#ADD8E6" }, // Index 54 (133O színén)
+            
+            /* --- VÉGTELEN MÓD ZÁRÓ BLOKK --- */
+            { v: "∞",    c: "#CCBB00" }  // Index 55 (Végtelen jel)
         ];
 
         /* Mentési kulcsok a böngésző helyi tárhelyéhez (localStorage) */
@@ -561,13 +570,13 @@
 
         /**
          * Automatikus mentés: Eltárolja az oszlopok indexeit ÉS a szöveges blokk-értékeket
-         * ('stringColumns') is, így a jövőbeli frissítések (v0.9, v1.0) sosem rontják el a mentést.
+         * ('stringColumns') is, így a jövőbeli frissítések (v1.0, v1.1) sosem rontják el a mentést.
          */
         function autoSave() {
             const stringColumns = columns.map(col => col.map(idx => config[idx] ? config[idx].v : null));
 
             const dataToSave = {
-                version: "0.81",
+                version: "0.9",
                 columns: columns,
                 stringColumns: stringColumns, // Ez biztosítja a jövőbeli kompatibilitást!
                 score: score,
